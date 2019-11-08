@@ -28,6 +28,22 @@ from .services import (
 @csrf_exempt
 @api_view(['POST'])
 def signup_endpoint(request):
+    """
+description: This API deletes/uninstalls a device.
+parameters:
+  - name: name
+    type: string
+    required: true
+    location: form
+  - name: bloodgroup
+    type: string
+    required: true
+    location: form
+  - name: birthmark
+    type: string
+    required: true
+    location: form
+"""
     if request.method == 'POST':
         payload = OneWayHash.password_to_hash(request.data)
 
@@ -75,10 +91,10 @@ def my_imformation(request):
     if request.method == 'GET':
         try:
             authorization = request.headers['Authorization']
-            user_id = JWTService.decode_jwt(authorization)
+            payload = JWTService.decode_jwt(authorization)
         except KeyError:
             raise NoIncludeJwt
         except jwt.exceptions.DecodeError:
             raise InappropriateJwt
 
-        return Response({'userId': user_id}, status=status.HTTP_200_OK)
+        return Response(payload, status=status.HTTP_200_OK)
