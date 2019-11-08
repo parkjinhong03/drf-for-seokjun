@@ -6,6 +6,7 @@ from .models import User
 from rest_framework.response import Response
 from rest_framework import status
 from myapi.settings import JWT_SECRET_KEY
+from django.core import exceptions
 
 
 class UserService(object):
@@ -28,16 +29,20 @@ class UserService(object):
     # id, password 일치 확인
     @staticmethod
     def check_id_and_password(payload):
-        _userId = payload['userId']
-        _userPw = payload['userPw']
+        try:
+            _userId = payload['userId']
+            _userPw = payload['userPw']
 
-        filter_user = User.objects.get(
-            userId=_userId
-        )
+            filter_user = User.objects.get(
+                userId=_userId
+            )
 
-        pw_compare = bcrypt.checkpw(_userPw.encode('utf-8'), filter_user.userPw.encode('utf-8'))
+            pw_compare = bcrypt.checkpw(_userPw.encode('utf-8'), filter_user.userPw.encode('utf-8'))
 
-        return pw_compare
+            return pw_compare
+
+        except exceptions.ObjectDoesNotExist:
+            return False
 
 
 class OneWayHash(object):
@@ -74,4 +79,7 @@ class JWTService(object):
     @staticmethod
     def decode_jwt(authorization):
         payload = jwt.decode(authorization, JWT_SECRET_KEY, algorithms=['HS256'])
-        return payload['id']
+        filter_user = User.objects.get(
+            userId=payload['id']
+        )
+        return {'userId': filter_user.userId, 'userName': filter_user.userName}
